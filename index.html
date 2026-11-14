@@ -1,0 +1,545 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backend Portfolio</title>
+<meta name="description" content="Kumpulan proyek backend: Go, PostgreSQL, Docker.">
+
+<style>
+  :root {
+    --ink: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --soft: #f9fafb;
+    --accent: #0f766e;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: #fff; scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: #fff;
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 72px 24px 56px;
+  }
+
+  header { margin-bottom: 48px; }
+
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+    cursor: pointer;
+    display: inline-block;
+    user-select: none;
+  }
+
+  .eyebrow:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 5px;
+    border-radius: 3px;
+  }
+
+  h1 {
+    font-size: clamp(32px, 6vw, 48px);
+    line-height: 1.1;
+    margin: 0 0 14px;
+    letter-spacing: -.02em;
+  }
+
+  header p {
+    margin: 0;
+    max-width: 560px;
+    color: var(--muted);
+    font-size: 18px;
+  }
+
+  .grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+  }
+
+  .card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px rgba(17,24,39,.07);
+    transform: translateY(-2px);
+  }
+
+  .preview {
+    margin: 0;
+    padding: 18px 20px;
+    background: var(--soft);
+    border-bottom: 1px solid var(--line);
+    font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: #374151;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .preview .dim { color: #9ca3af; }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 20px;
+  }
+
+  .card h2 {
+    font-size: 20px;
+    margin: 0 0 8px;
+    letter-spacing: -.01em;
+  }
+
+  .card p {
+    margin: 0 0 16px;
+    color: #4b5563;
+    font-size: 15px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px;
+  }
+
+  .tags li {
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+
+  .link {
+    margin-top: auto;
+    align-self: flex-start;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .link:hover { text-decoration: underline; }
+
+  .link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  footer {
+    margin-top: 56px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* ===== EASTER EGG MODAL ===== */
+
+  .secret-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(17, 24, 39, .65);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .3s ease, visibility .3s ease;
+  }
+
+  .secret-modal.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .secret-card {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 36px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: #fff;
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,.2);
+
+    transform: translateY(20px) scale(.96);
+    transition: transform .3s ease;
+  }
+
+  .secret-modal.active .secret-card {
+    transform: translateY(0) scale(1);
+  }
+
+  .secret-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 27px;
+    cursor: pointer;
+  }
+
+  .secret-close:hover { color: var(--ink); }
+
+  .secret-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+    animation: egg-bounce 1.5s ease infinite;
+  }
+
+  .secret-label {
+    display: block;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .secret-card h2 {
+    font-size: 25px;
+    line-height: 1.25;
+    margin: 0 0 18px;
+  }
+
+  .secret-card p {
+    color: #4b5563;
+    font-size: 14px;
+    line-height: 1.8;
+    margin: 0 0 15px;
+  }
+
+  .secret-card h3 {
+    color: var(--accent);
+    font-size: 18px;
+    margin: 24px 0;
+  }
+
+  .secret-footer {
+    font-size: 12px !important;
+    color: var(--muted) !important;
+  }
+
+  .secret-button {
+    width: 100%;
+    padding: 12px 18px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+  }
+
+  .secret-button:hover {
+    background: #115e59;
+    transform: translateY(-2px);
+  }
+
+  .secret-card small {
+    display: block;
+    margin-top: 18px;
+    color: #9ca3af;
+    font: 11px ui-monospace, monospace;
+  }
+
+  @keyframes egg-bounce {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-7px) rotate(8deg); }
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 48px 18px 40px; }
+    .secret-card { padding: 30px 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <header>
+    <!-- Klik tulisan ini 5 kali untuk membuka Easter Egg -->
+    <p
+      class="eyebrow"
+      id="secret-trigger"
+      role="button"
+      tabindex="0"
+      aria-label="Backend Portfolio. Klik lima kali untuk menemukan pesan rahasia."
+      title="Backend Portfolio"
+    >Backend Portfolio</p>
+
+    <h1>Proyek backend</h1>
+
+    <p>
+      Kumpulan proyek backend yang saya bangun.
+      Setiap kartu menautkan ke repositori di GitHub.
+      Proyek akan terus di-update...
+    </p>
+  </header>
+
+  <main class="grid">
+
+    <!-- ===== Card: account-api ===== -->
+    <article class="card">
+      <pre class="preview" aria-label="Struktur repositori"><span class="dim">account-api/</span>
+├── cmd/api
+├── internal
+├── migrations
+└── compose.yaml</pre>
+
+      <div class="body">
+        <h2>Account API</h2>
+
+        <p>
+          API akun pengguna dengan Go dan PostgreSQL.
+          Skema dikelola lewat migrasi SQL terversi,
+          dan seluruh lingkungan berjalan di Docker Compose
+          tanpa install Go atau PostgreSQL di host.
+          Memakai healthcheck database dan container non-root.
+        </p>
+
+        <ul class="tags">
+          <li>Go</li>
+          <li>PostgreSQL</li>
+          <li>Docker Compose</li>
+          <li>golang-migrate</li>
+          <li>WSL2</li>
+        </ul>
+
+        <a
+          class="link"
+          href="https://github.com/arckotama/account-api"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Lihat di GitHub &rarr;</a>
+      </div>
+    </article>
+
+    <!-- ===== TEMPLATE: PROJECT BARU =====
+    <article class="card">
+      <pre class="preview" aria-label="Preview"><span class="dim">nama-repo/</span>
+├── folder-1
+└── folder-2</pre>
+      <div class="body">
+        <h2>Judul Proyek</h2>
+        <p>Deskripsi singkat proyek.</p>
+        <ul class="tags">
+          <li>Go</li>
+          <li>PostgreSQL</li>
+        </ul>
+        <a class="link" href="https://github.com/USERNAME/REPO"
+           target="_blank" rel="noopener noreferrer">
+           Lihat di GitHub &rarr;
+        </a>
+      </div>
+    </article>
+    -->
+
+  </main>
+
+  <footer>
+    &copy; 2026
+  </footer>
+
+</div>
+
+<!-- ===== SECRET MESSAGE ===== -->
+
+<div
+  class="secret-modal"
+  id="secret-modal"
+  aria-hidden="true"
+>
+  <div
+    class="secret-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="secret-title"
+  >
+
+    <button
+      class="secret-close"
+      id="secret-close"
+      aria-label="Tutup pesan rahasia"
+    >&times;</button>
+
+    <div class="secret-icon">🥚✨</div>
+
+    <span class="secret-label">SECRET MESSAGE UNLOCKED</span>
+
+    <h2 id="secret-title">Wah, ketemu juga! 👀</h2>
+
+    <p>
+      Halo, Kak Recruiter! Hehe.
+      Nggak nyangka ada yang cukup teliti
+      sampai menemukan pesan tersembunyi ini.
+    </p>
+
+    <p>
+      Terima kasih sudah meluangkan waktu
+      untuk mampir dan melihat karya-karya saya.
+    </p>
+
+    <p>
+      Saya memang masih dalam perjalanan belajar.
+      Masih sering debugging, membaca dokumentasi,
+      mencari solusi, dan sesekali bertanya,
+      "Kenapa error lagi, ya?" 😂
+    </p>
+
+    <p>
+      Tapi satu hal yang saya pegang:
+      <strong>saya selalu punya rasa ingin tahu,
+      kemauan belajar, dan semangat untuk berkembang.</strong>
+    </p>
+
+    <p>
+      Kalau kebetulan saat ini Kakak sedang mencari
+      seorang intern yang siap belajar, menerima tantangan,
+      dan berkembang bersama tim...
+    </p>
+
+    <h3>Semoga kita berjodoh dalam satu tim! 🤝</h3>
+
+    <p class="secret-footer">
+      Terima kasih sudah sampai sejauh ini.
+      Semoga hari Kakak menyenangkan!
+    </p>
+
+    <button class="secret-button" id="secret-done">
+      Siap, semangat terus! 🚀
+    </button>
+
+    <small>// end of secret message_</small>
+
+  </div>
+</div>
+
+<script>
+  // ===== EASTER EGG INTERACTION =====
+
+  const trigger = document.getElementById("secret-trigger");
+  const modal = document.getElementById("secret-modal");
+  const closeButton = document.getElementById("secret-close");
+  const doneButton = document.getElementById("secret-done");
+
+  let clickCount = 0;
+  let unlocked = false;
+  let clickTimer;
+
+  function openSecret() {
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    closeButton.focus();
+  }
+
+  function closeSecret() {
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    trigger.focus();
+  }
+
+  function handleSecretClick() {
+    if (unlocked) return;
+
+    clickCount++;
+    clearTimeout(clickTimer);
+
+    clickTimer = setTimeout(() => {
+      clickCount = 0;
+    }, 3000);
+
+    if (clickCount >= 5) {
+      unlocked = true;
+      clearTimeout(clickTimer);
+      openSecret();
+    }
+  }
+
+  trigger.addEventListener("click", handleSecretClick);
+
+  // Support keyboard activation
+  trigger.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleSecretClick();
+    }
+  });
+
+  closeButton.addEventListener("click", closeSecret);
+  doneButton.addEventListener("click", closeSecret);
+
+  // Close when clicking outside the modal card
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeSecret();
+    }
+  });
+
+  // Close using Escape key
+  document.addEventListener("keydown", (event) => {
+    if (
+      event.key === "Escape" &&
+      modal.classList.contains("active")
+    ) {
+      closeSecret();
+    }
+  });
+</script>
+
+</body>
+</html>
